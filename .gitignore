@@ -1,0 +1,5 @@
+.vscode/
+/libigl/
+/libigl-tutorial-data/
+/libigl-example-project/
+build/
