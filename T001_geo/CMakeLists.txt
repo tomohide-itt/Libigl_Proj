@@ -16,7 +16,7 @@ file(GLOB SRC_FILES *.cpp)
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 #
-add_subdirectory(lib gmsh)
+add_subdirectory(gmsh gmsh)
 
 # 必要なライブラリをリンクする 
 target_link_libraries(${PROJECT_NAME} PUBLIC 
