@@ -86,8 +86,12 @@ endif()
 set_property(GLOBAL PROPERTY __igl_module_path ${CMAKE_MODULE_PATH})
 
 
-
+# トップレベルなら，LIBIGL_DEFAULT_CGALをONに設定
 set(LIBIGL_DEFAULT_CGAL ${LIBIGL_TOPLEVEL_PROJECT})
+# MATLABに対する設定
+# 特定バージョンの MATLAB に対して，対応する内部バージョン番号（APIバージョン）をマッピング
+# これは MATLAB サポートを検出するために使われることがあり，CMake の FindMatlab.cmake などが
+# 対応していないバージョンでも見つけられるようにするため
 set(MATLAB_ADDITIONAL_VERSIONS
     "R2023b=10.4"
     "R2023a=10.4"
@@ -96,20 +100,38 @@ set(MATLAB_ADDITIONAL_VERSIONS
     "R2021b=10.1"
     "R2021a=10.0"
 )
+# トップレベルなら，LIBIGL_DEFAULT_MATLABをONに設定
 set(LIBIGL_DEFAULT_MATLAB ${LIBIGL_TOPLEVEL_PROJECT})
+# トップレベルなら，LIBIGL_DEFAULT_MOSEKをONに設定
 set(LIBIGL_DEFAULT_MOSEK ${LIBIGL_TOPLEVEL_PROJECT})
+# トップレベルプロジェクトとしてビルドしている場合に限り，
+# MATLAB と MOSEK の自動検出を試みて，見つからなければそれぞれのモジュールを無効化する処理
 if(LIBIGL_TOPLEVEL_PROJECT)
+    # MATLABの検出
+    # QUIETにより，見つからなくてもエラーメッセージを表示しない
+    # find_packageは，自身のプロジェクトに属していないライブラリを自動検索するコマンド
+    # モジュールモード，コンフィグモードの順で探す．
+    # モジュールモードでは，Find<Package>.cmakeを探し，コンフィグモードでは，<Package>Config.cmakeを探す
+    # FindMatlab.cmake を使って、MATLAB を探す
+    # MatlabConfig.cmake 
     find_package(Matlab QUIET)
+    # MATLABが見つからない場合，LIBIGL_DEFAULT_MATLABをOFFに設定して警告を表示
     if(NOT Matlab_FOUND)
         set(LIBIGL_DEFAULT_MATLAB OFF)
         message(WARNING "Matlab not found, disabling igl_restricted::matlab module.")
     endif()
+    # MOSEK（数理最適化ソルバ）の検出
+    # FindMOESK.cmake を使って、MOSEK を探す
     find_package(MOSEK QUIET)
+    # MOSEKが見つからない場合，LIBIGL_DEFAULT_MOSEKをOFFに設定して警告を表示
     if(NOT MOSEK_FOUND)
         set(LIBIGL_DEFAULT_MOSEK OFF)
         message(WARNING "Mosek not found, disabling igl_restricted::mosek module.")
     endif()
 endif()
+
+# トップレベルなら，LIBIGL_DEFAULT_COMISOをONに設定
+# ただし，APPLEプラットフォームでない場合やBLASライブラリが見つからなければOFFに設定
 set(LIBIGL_DEFAULT_COMISO ${LIBIGL_TOPLEVEL_PROJECT})
 if(LIBIGL_TOPLEVEL_PROJECT AND (NOT APPLE) AND UNIX)
   find_package(BLAS QUIET)
@@ -119,20 +141,22 @@ if(LIBIGL_TOPLEVEL_PROJECT AND (NOT APPLE) AND UNIX)
     endif()
 endif()
 
-#[[
-
-# Build tests and tutorials
+# トップレベルなら，LIBIGL_BUILD_TESTS, LIBIGL_BUILD_TUTORIALS, LIBIGL_INSTALLをONに設定
 option(LIBIGL_BUILD_TESTS      "Build libigl unit test"                ${LIBIGL_TOPLEVEL_PROJECT})
 option(LIBIGL_BUILD_TUTORIALS  "Build libigl tutorial"                 ${LIBIGL_TOPLEVEL_PROJECT})
 option(LIBIGL_INSTALL          "Enable installation of libigl targets" ${LIBIGL_TOPLEVEL_PROJECT})
 
-# USE_STATIC_LIBRARY speeds up the generation of multiple binaries,
-# at the cost of a longer initial compilation time
-# (by default, static build is off since libigl is a header-only library)
+
+# LIBIGL_USE_STATIC_LIBRARYがONの場合，libiglを静的ライブラリとしてビルドする
+# ただし，LIBIGL_TOPLEVEL_PROJECTがONの場合のみ
+# これは，libiglがヘッダオンリーライブラリであるため，デフォルトではOFFに設定されている
+# ONにすることで，複数のバイナリの生成が高速化される
+# ただし，初期のコンパイル時間は長くなる
 option(LIBIGL_USE_STATIC_LIBRARY "Use libigl as static library" ${LIBIGL_TOPLEVEL_PROJECT})
 
-# Permissive modules. These modules are available under MPL2 license, and their dependencies are available
-# under a permissive or public domain license.
+
+# これらのモジュールは，MPL2ライセンスで利用可能であり，その依存関係は許可されたライセンスまたはパブリックドメインライセンスで利用可能
+# これらのモジュールは，libiglのコア機能を拡張するために使用される
 option(LIBIGL_EMBREE           "Build target igl::embree"           ${LIBIGL_TOPLEVEL_PROJECT})
 option(LIBIGL_GLFW             "Build target igl::glfw"             ${LIBIGL_TOPLEVEL_PROJECT})
 option(LIBIGL_IMGUI            "Build target igl::imgui"            ${LIBIGL_TOPLEVEL_PROJECT})
@@ -142,32 +166,44 @@ option(LIBIGL_PREDICATES       "Build target igl::predicates"       ${LIBIGL_TOP
 option(LIBIGL_SPECTRA          "Build target igl::spectra"          ${LIBIGL_TOPLEVEL_PROJECT})
 option(LIBIGL_XML              "Build target igl::xml"              ${LIBIGL_TOPLEVEL_PROJECT})
 
-# Copyleft modules. These modules are available under GPL license, and their dependencies are
-# available under a copyleft license.
+
+# これらのモジュールは，GPLライセンスで利用可能であり，その依存関係はコピーレフトライセンスで利用可能
 option(LIBIGL_COPYLEFT_CORE    "Build target igl_copyleft::core"    ${LIBIGL_TOPLEVEL_PROJECT})
 option(LIBIGL_COPYLEFT_CGAL    "Build target igl_copyleft::cgal"    ${LIBIGL_DEFAULT_CGAL})
 option(LIBIGL_COPYLEFT_COMISO  "Build target igl_copyleft::comiso"  ${LIBIGL_TOPLEVEL_PROJECT})
 option(LIBIGL_COPYLEFT_TETGEN  "Build target igl_copyleft::tetgen"  ${LIBIGL_TOPLEVEL_PROJECT})
 
-# Restricted modules. These modules are available under MPL2 license, but their dependencies are
-# only available under a non-commercial or proprietary license.
+
+# これらのモジュールは，MPL2ライセンスで利用可能であり，その依存関係は非商用ライセンスまたはプロプライエタリライセンスで利用可能
 option(LIBIGL_RESTRICTED_MATLAB   "Build target igl_restricted::matlab"   ${LIBIGL_DEFAULT_MATLAB})
 option(LIBIGL_RESTRICTED_MOSEK    "Build target igl_restricted::mosek"    ${LIBIGL_DEFAULT_MOSEK})
 option(LIBIGL_RESTRICTED_TRIANGLE "Build target igl_restricted::triangle" ${LIBIGL_TOPLEVEL_PROJECT})
 
-# GLFW doesn't run on headless CI machines so don't run (or build them).
-# Unfortunately on headless mac machines glfw seems to hang rather than crash
-# making it hard to catch at runtime.
+
+# GLFWはヘッドレスCIマシンでは動作しないため，テストを実行しない（またはビルドしない）
+# 不幸なことに，ヘッドレスmacマシンではglfwがクラッシュするのではなくハングアップするようで，
+# 実行時にキャッチするのが難しい
 option(LIBIGL_GLFW_TESTS       "Build igl::glfw tests"             ${LIBIGL_TOPLEVEL_PROJECT})
 
+# LIBIGL_WARNINGS_AS_ERRORSをOFFに設定
 option(LIBIGL_WARNINGS_AS_ERRORS "Turn on many warnings and treat as errors" OFF)
 
+# ディレクトリパスの設定 
+# CMAKE_BINARY_DIRは，CMakeがビルドを行うために使用するディレクトリのパスを示す
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 
-# Include CMake helper functions
+# CMake ヘルパー関数をインクルード
+# cmake/igl_add_library.cmakeは，ライブラリを追加するためのヘルパー関数を定義している
+# cmake/igl_add_test.cmakeは，テストを追加するためのヘルパー関数を定義している
+# cmake/igl_add_tutorial.cmakeは，チュートリアルを追加するためのヘルパー関数を定義している
+# cmake/igl_copy_dll.cmakeは，DLLをコピーするためのヘルパー関数を定義している
+# cmake/igl_include.cmakeは，ヘッダーファイルをインクルードするためのヘルパー関数を定義している
+# cmake/igl_install.cmakeは，インストールするためのヘルパー関数を定義している
+# cmake/igl_target_sources.cmakeは，ターゲットのソースファイルを追加するためのヘルパー関数を定義している
+# これらのヘルパー関数は，libiglのビルドプロセスを簡素化するために使用される
 include(igl_add_library)
 include(igl_add_test)
 include(igl_add_tutorial)
@@ -176,14 +212,21 @@ include(igl_include)
 include(igl_install)
 include(igl_target_sources)
 
-# Enable unit testing at the root level
+
+# ルートレベルでユニットテストを有効にする
+# ユニットテストは，個々のモジュールや関数が正しく動作するかどうかを確認するためのテスト
 if(LIBIGL_BUILD_TESTS)
     include(CTest)
 endif()
 
-# Defines CMake targets for selected libigl modules
+
+# これにより，libiglのモジュールをCMakeのターゲットとして定義する
 include(libigl)
 
+
+# tutorialディレクトリを追加
+# これは，libiglのチュートリアルをビルドするためのディレクトリ
+# チュートリアルは，libiglの使い方を学ぶためのサンプルコードやドキュメントを含む
 if(LIBIGL_BUILD_TUTORIALS)
     add_subdirectory(tutorial)
 endif()
