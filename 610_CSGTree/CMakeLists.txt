@@ -264,5 +264,3 @@ if(LIBIGL_INSTALL)
     install(FILES "${project_config_out}" "${version_config_file}" DESTINATION "${export_dest_dir}")
 endif()
 
-]]
-
