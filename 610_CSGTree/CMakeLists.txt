@@ -223,7 +223,7 @@ endif()
 # これにより，libiglのモジュールをCMakeのターゲットとして定義する
 include(libigl)
 
-
+#[[
 # tutorialディレクトリを追加
 # これは，libiglのチュートリアルをビルドするためのディレクトリ
 # チュートリアルは，libiglの使い方を学ぶためのサンプルコードやドキュメントを含む
@@ -263,4 +263,4 @@ if(LIBIGL_INSTALL)
     write_basic_package_version_file("${version_config_file}" COMPATIBILITY SameMajorVersion)
     install(FILES "${project_config_out}" "${version_config_file}" DESTINATION "${export_dest_dir}")
 endif()
-
+]]
