@@ -33,8 +33,8 @@ set(LIBIGL_DEFAULT_CGAL ${LIBIGL_TOPLEVEL_PROJECT})
 
 # ビルドを有効にするオプションを設定
 option(LIBIGL_BUILD_TUTORIALS  "Build libigl tutorial"  ${LIBIGL_TOPLEVEL_PROJECT})
-option(LIBIGL_GLFW             "Build target igl::glfw"             ${LIBIGL_TOPLEVEL_PROJECT})
-option(LIBIGL_COPYLEFT_CGAL    "Build target igl_copyleft::cgal"    ${LIBIGL_DEFAULT_CGAL})
+#option(LIBIGL_GLFW             "Build target igl::glfw"             ${LIBIGL_TOPLEVEL_PROJECT})
+#option(LIBIGL_COPYLEFT_CGAL    "Build target igl_copyleft::cgal"    ${LIBIGL_DEFAULT_CGAL})
 
 # ディレクトリパスの設定 
 # CMAKE_BINARY_DIRは，CMakeがビルドを行うために使用するディレクトリのパスを示す

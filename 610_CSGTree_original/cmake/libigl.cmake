@@ -16,6 +16,9 @@ include(igl_windows)
 
 # Libigl permissive modules
 igl_include(core)
+igl_include(glfw)
+igl_include(copyleft cgal)
+#[[
 igl_include_optional(embree)
 igl_include_optional(opengl)
 igl_include_optional(glfw)
@@ -34,3 +37,4 @@ igl_include_optional(copyleft tetgen)
 igl_include_optional(restricted matlab)
 igl_include_optional(restricted mosek)
 igl_include_optional(restricted triangle)
+]]
