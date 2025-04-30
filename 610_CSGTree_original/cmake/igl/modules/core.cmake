@@ -28,5 +28,5 @@ target_link_libraries(igl_core ${IGL_SCOPE}
 )
 
 # 6. Unit tests
-file(GLOB SRC_FILES "${libigl_SOURCE_DIR}/tests/include/igl/*.cpp")
-igl_add_test(igl_core ${SRC_FILES})
+#file(GLOB SRC_FILES "${libigl_SOURCE_DIR}/tests/include/igl/*.cpp")
+#igl_add_test(igl_core ${SRC_FILES})

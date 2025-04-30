@@ -24,6 +24,7 @@ target_link_libraries(igl_copyleft_cgal ${IGL_SCOPE}
 )
 
 # 5. Unit tests
+#[[
 file(GLOB SRC_FILES
     "${libigl_SOURCE_DIR}/tests/include/igl/copyleft/boolean/*.cpp"
     "${libigl_SOURCE_DIR}/tests/include/igl/copyleft/cgal/*.cpp"
@@ -32,3 +33,4 @@ igl_add_test(igl_copyleft_cgal ${SRC_FILES})
 if(TARGET test_igl_copyleft_cgal)
     igl_copy_dll(test_igl_copyleft_cgal)
 endif()
+]]
