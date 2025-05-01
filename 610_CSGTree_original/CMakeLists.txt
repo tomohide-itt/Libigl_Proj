@@ -17,9 +17,7 @@ project(libigl VERSION 2.5.0)
 # これにより，CMakeは指定されたディレクトリ内のモジュールを優先的に検索する
 # CMAKE_CURRENT_LIST_DIRは現在のCMakeLists.txtファイルのディレクトリの絶対パスを示す
 list(PREPEND CMAKE_MODULE_PATH
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/
     ${CMAKE_CURRENT_LIST_DIR}/cmake/igl
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/find
     ${CMAKE_CURRENT_LIST_DIR}/cmake/recipes/external
 )
 
