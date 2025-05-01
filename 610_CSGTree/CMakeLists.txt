@@ -1,32 +1,57 @@
-#必要なCMakeのバージョンを指定
+# トップレベルプロジェクトかどうかを検出
+get_directory_property(LIBIGL_PARENT_DIR PARENT_DIRECTORY)
+if(NOT LIBIGL_PARENT_DIR)
+    set(LIBIGL_TOPLEVEL_PROJECT ON)
+else()
+    set(LIBIGL_TOPLEVEL_PROJECT OFF)
+endif()
+
+# 必要なCMakeのバージョンをチェック
 cmake_minimum_required(VERSION 3.16)
 
-####################################################################################
+################################################################################
 # プロジェクトの名前とバージョンを設定
-project(610_CSGTree VERSION 2.5.0)
+project(libigl VERSION 2.5.0)
 
 # CMakeのモジュール検索パス（CMAKE_MODULE_PATH）に複数のディレクトリを先頭に追加（PREPEND）
-list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+# これにより，CMakeは指定されたディレクトリ内のモジュールを優先的に検索する
+# CMAKE_CURRENT_LIST_DIRは現在のCMakeLists.txtファイルのディレクトリの絶対パスを示す
+list(PREPEND CMAKE_MODULE_PATH
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/igl
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/find
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/recipes/external
+)
+
+# CMakeのモジュールパスをグローバルプロパティ__igl_module_pathに設定
+# これにより，libiglのモジュールを他のCMakeLists.txtファイルからも参照できるようになる
+# __igl_module_pathはlibiglのモジュールを検索するためのパスを格納するプロパティ
+set_property(GLOBAL PROPERTY __igl_module_path ${CMAKE_MODULE_PATH})
+
+# Set default options
+set(LIBIGL_DEFAULT_CGAL ${LIBIGL_TOPLEVEL_PROJECT})
+
+# ディレクトリパスの設定 
+# CMAKE_BINARY_DIRは，CMakeがビルドを行うために使用するディレクトリのパスを示す
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+
+# CMake ヘルパー関数をインクルード
+# これらのヘルパー関数は，libiglのビルドプロセスを簡素化するために使用される
+include(igl_add_library)
+include(igl_add_executable)
+include(igl_copy_dll)
+include(igl_include)
+include(igl_install)
+include(igl_target_sources)
 
 # libiglのモジュールをCMakeのターゲットとして定義する
 message(STATUS "=== include libigl modules ===")
-include(libigl)
-
-# モジュールを有効化する
 igl_include(core)
 igl_include(glfw)
 igl_include(copyleft cgal)
 
-# ソースファイルを集める 
-file(GLOB SRC_FILES *.cpp)
+# srcディレクトリを追加
+add_subdirectory(src)
 
-# 実行ファイルを生成する 
-add_executable(${PROJECT_NAME} ${SRC_FILES})
-
-# 必要なライブラリをリンクする 
-target_link_libraries(${PROJECT_NAME} PUBLIC 
-  igl::core
-)
-
-# データへのパスを指定する 
-target_compile_definitions( ${PROJECT_NAME} PRIVATE TUTORIAL_SHARED_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/data\" )

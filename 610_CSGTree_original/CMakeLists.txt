@@ -48,7 +48,6 @@ include(igl_target_sources)
 
 # libiglのモジュールをCMakeのターゲットとして定義する
 message(STATUS "=== include libigl modules ===")
-#include(libigl)
 igl_include(core)
 igl_include(glfw)
 igl_include(copyleft cgal)
