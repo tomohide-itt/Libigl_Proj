@@ -31,30 +31,16 @@ set_property(GLOBAL PROPERTY __igl_module_path ${CMAKE_MODULE_PATH})
 # Set default options
 set(LIBIGL_DEFAULT_CGAL ${LIBIGL_TOPLEVEL_PROJECT})
 
-# ビルドを有効にするオプションを設定
-option(LIBIGL_BUILD_TUTORIALS  "Build libigl tutorial"  ${LIBIGL_TOPLEVEL_PROJECT})
-#option(LIBIGL_GLFW             "Build target igl::glfw"             ${LIBIGL_TOPLEVEL_PROJECT})
-#option(LIBIGL_COPYLEFT_CGAL    "Build target igl_copyleft::cgal"    ${LIBIGL_DEFAULT_CGAL})
-
 # ディレクトリパスの設定 
 # CMAKE_BINARY_DIRは，CMakeがビルドを行うために使用するディレクトリのパスを示す
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-
 # CMake ヘルパー関数をインクルード
-# cmake/igl_add_library.cmakeは，ライブラリを追加するためのヘルパー関数を定義している
-# cmake/igl_add_test.cmakeは，テストを追加するためのヘルパー関数を定義している
-# cmake/igl_add_tutorial.cmakeは，チュートリアルを追加するためのヘルパー関数を定義している
-# cmake/igl_copy_dll.cmakeは，DLLをコピーするためのヘルパー関数を定義している
-# cmake/igl_include.cmakeは，ヘッダーファイルをインクルードするためのヘルパー関数を定義している
-# cmake/igl_install.cmakeは，インストールするためのヘルパー関数を定義している
-# cmake/igl_target_sources.cmakeは，ターゲットのソースファイルを追加するためのヘルパー関数を定義している
 # これらのヘルパー関数は，libiglのビルドプロセスを簡素化するために使用される
 include(igl_add_library)
-#include(igl_add_test)
-include(igl_add_tutorial)
+include(igl_add_executable)
 include(igl_copy_dll)
 include(igl_include)
 include(igl_install)
@@ -62,10 +48,11 @@ include(igl_target_sources)
 
 # libiglのモジュールをCMakeのターゲットとして定義する
 message(STATUS "=== include libigl modules ===")
-include(libigl)
+#include(libigl)
+igl_include(core)
+igl_include(glfw)
+igl_include(copyleft cgal)
 
-# tutorialディレクトリを追加
-if(LIBIGL_BUILD_TUTORIALS)
-    add_subdirectory(tutorial)
-endif()
+# srcディレクトリを追加
+add_subdirectory(src)
 

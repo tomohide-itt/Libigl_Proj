@@ -18,23 +18,4 @@ include(igl_windows)
 igl_include(core)
 igl_include(glfw)
 igl_include(copyleft cgal)
-#[[
-igl_include_optional(embree)
-igl_include_optional(opengl)
-igl_include_optional(glfw)
-igl_include_optional(imgui)
-igl_include_optional(predicates)
-igl_include_optional(stb)
-igl_include_optional(spectra)
-igl_include_optional(xml)
 
-# Libigl copyleft modules
-igl_include_optional(copyleft core)
-igl_include_optional(copyleft cgal)
-igl_include_optional(copyleft tetgen)
-
-# Libigl restricted modules
-igl_include_optional(restricted matlab)
-igl_include_optional(restricted mosek)
-igl_include_optional(restricted triangle)
-]]
