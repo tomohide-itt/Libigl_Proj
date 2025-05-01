@@ -1,11 +1,3 @@
-# トップレベルプロジェクトかどうかを検出
-get_directory_property(LIBIGL_PARENT_DIR PARENT_DIRECTORY)
-if(NOT LIBIGL_PARENT_DIR)
-    set(LIBIGL_TOPLEVEL_PROJECT ON)
-else()
-    set(LIBIGL_TOPLEVEL_PROJECT OFF)
-endif()
-
 # 必要なCMakeのバージョンをチェック
 cmake_minimum_required(VERSION 3.16)
 
@@ -17,9 +9,7 @@ project(libigl VERSION 2.5.0)
 # これにより，CMakeは指定されたディレクトリ内のモジュールを優先的に検索する
 # CMAKE_CURRENT_LIST_DIRは現在のCMakeLists.txtファイルのディレクトリの絶対パスを示す
 list(PREPEND CMAKE_MODULE_PATH
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/
     ${CMAKE_CURRENT_LIST_DIR}/cmake/igl
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/find
     ${CMAKE_CURRENT_LIST_DIR}/cmake/recipes/external
 )
 
@@ -27,9 +17,6 @@ list(PREPEND CMAKE_MODULE_PATH
 # これにより，libiglのモジュールを他のCMakeLists.txtファイルからも参照できるようになる
 # __igl_module_pathはlibiglのモジュールを検索するためのパスを格納するプロパティ
 set_property(GLOBAL PROPERTY __igl_module_path ${CMAKE_MODULE_PATH})
-
-# Set default options
-set(LIBIGL_DEFAULT_CGAL ${LIBIGL_TOPLEVEL_PROJECT})
 
 # ディレクトリパスの設定 
 # CMAKE_BINARY_DIRは，CMakeがビルドを行うために使用するディレクトリのパスを示す
