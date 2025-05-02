@@ -41,9 +41,15 @@ igl_include(copyleft cgal)
 
 # 自作ライブラリを追加
 add_subdirectory(libs/gmsh gmsh)
+add_subdirectory(libs/migl migl)
 
 # 実行可能ファイルの追加
-igl_add_executable(${PRGNAME} igl::glfw igl_copyleft::cgal gmsh )
+igl_add_executable(${PRGNAME} igl::glfw igl_copyleft::cgal gmsh migl )
+
+target_include_directories( ${PRGNAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/gmsh
+    ${CMAKE_CURRENT_SOURCE_DIR}/libs/migl
+)
 
 # データへのパスを指定する 
 target_compile_definitions( ${PRGNAME} PRIVATE DATA_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/data\" )

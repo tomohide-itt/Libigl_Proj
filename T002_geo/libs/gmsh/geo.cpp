@@ -14,12 +14,146 @@ void gmsh::geo::read(const std::string &filename)
     // Calculate the number of points, lines, surfaces, and volumes
     // and the max point, line, surface, and volume tags
     read_max_tags(file);
-    this->m_points.resize(this->m_max_point_tag + 1);
     // Read the entities
     read_entities(file);
     // Close the file
     file.close();
     std::cout << "Finished reading file: " << filename << std::endl;
+}
+
+
+std::vector<migl::mesh> gmsh::geo::get_meshes() const
+{
+    std::vector<migl::mesh> meshes;
+
+    // Create a mesh for each volume
+    int dim = 3;
+    for( const auto &volume : this->m_volumes )
+    {
+        int num_faces = volume.size();
+        int num_vertices = 0;
+        std::map<int, int> map_ptag2vindex;
+        std::map<int, int> map_vindex2ptag;
+        for( int i = 0; i < num_faces; i++ )
+        {
+            int sf_tag = volume.surface_tag(i);
+            int sf_index = this->m_surface_map_tag2index.at(sf_tag);
+            surface sf = this->m_surfaces[sf_index];
+            int num_lines = sf.size();
+            //+++
+            //std::cout << "i: " << i << " sf_tag: " << sf_tag << " sf_index: " << sf_index << " num_lines: " << num_lines << std::endl;
+            //---
+            for( int j=0; j<num_lines; j++ )
+            {
+                int ln_tag = sf.line_tag(j);
+                int ln_positive_tag = sf.line_positive_tag(j);
+                //+++
+                //std::cout << "  j: " << j << " ln_tag: " << ln_tag << std::endl;
+                //---
+                int ln_index = this->m_line_map_tag2index.at(ln_positive_tag);
+                line ln = this->m_lines[ln_index];
+                int pt1_index = this->m_point_map_tag2index.at(ln.start_point_tag());
+                int pt2_index = this->m_point_map_tag2index.at(ln.end_point_tag());
+                point pt1 = this->m_points[pt1_index];
+                point pt2 = this->m_points[pt2_index];
+                int pt1_tag = pt1.tag();
+                int pt2_tag = pt2.tag();
+                if( !map_ptag2vindex.count(pt1_tag) )
+                {
+                    map_ptag2vindex[pt1_tag] = num_vertices;
+                    map_vindex2ptag[num_vertices] = pt1_tag;
+                    num_vertices++;
+                }
+                if( !map_ptag2vindex.count(pt2_tag) )
+                {
+                    map_ptag2vindex[pt2_tag] = num_vertices;
+                    map_vindex2ptag[num_vertices] = pt2_tag;
+                    num_vertices++;
+                }
+            }
+        }
+        //+++
+        //std::cout << "num_vertices: " << num_vertices << std::endl;
+        //std::cout << "map_ptag2vindex: " << std::endl;
+        //for( const auto &pair : map_ptag2vindex )
+        //{
+        //    std::cout << "  " << pair.first << " -> " << pair.second << std::endl;
+        //}
+        //std::cout << "map_vindex2ptag: " << std::endl;
+        //for( const auto &pair : map_vindex2ptag )
+        //{
+        //    std::cout << "  " << pair.first << " -> " << pair.second << std::endl;
+        //}
+        //---
+        // Create the vertex matrix
+        migl::mesh mesh(dim, num_vertices, num_faces);
+        for( int i=0; i<num_vertices; i++ )
+        {
+            int pt_tag = map_vindex2ptag.at(i);
+            int pt_index = this->m_point_map_tag2index.at(pt_tag);
+            point pt = this->m_points[pt_index];
+            mesh.vertex_matrix()(i,0) = pt.x();
+            mesh.vertex_matrix()(i,1) = pt.y();
+            mesh.vertex_matrix()(i,2) = pt.z();
+        }
+        //+++
+        std::cout << "mesh.vertex_matrix(): " << std::endl;
+        std::cout << mesh.vertex_matrix() << std::endl;
+        //---
+        // Create the face matrix
+        for( int i=0; i<num_faces; i++ )
+        {
+            int sf_tag = volume.surface_tag(i);
+            int sf_index = this->m_surface_map_tag2index.at(sf_tag);
+            surface sf = this->m_surfaces[sf_index];
+            int num_lines = sf.size();
+            //+++
+            //std::cout << "i: " << i << " sf_tag: " << sf_tag << " sf_index: " << sf_index << " num_lines: " << num_lines << std::endl;
+            //---
+            for( int j=0; j<num_lines; j++ )
+            {
+                int ln_tag = sf.line_tag(j);
+                int ln_positive_tag = sf.line_positive_tag(j);
+                //+++
+                //std::cout << "  j: " << j << " ln_tag: " << ln_tag << std::endl;
+                //---
+                int ln_index = this->m_line_map_tag2index.at(ln_positive_tag);
+                line ln = this->m_lines[ln_index];
+                int pt1_index = this->m_point_map_tag2index.at(ln.start_point_tag());
+                int pt2_index = this->m_point_map_tag2index.at(ln.end_point_tag());
+                point pt1 = this->m_points[pt1_index];
+                point pt2 = this->m_points[pt2_index];
+                int pt1_tag = pt1.tag();
+                int pt2_tag = pt2.tag();
+                //+++
+                //std::cout << "    pt1_tag: " << pt1_tag << " pt2_tag: " << pt2_tag << std::endl;
+                //---
+                if( ln_tag > 0 )
+                {
+                    mesh.face_matrix()(i,j) = map_ptag2vindex.at(pt1_tag);
+                    //+++
+                    //std::cout << "    registered pt_tag: " << pt1_tag << std::endl;
+                    //std::cout << "    registered vindex:" << map_ptag2vindex.at(pt1_tag) << std::endl;
+                    //---
+                }
+                else
+                {
+                    mesh.face_matrix()(i,j) = map_ptag2vindex.at(pt2_tag);
+                    //+++
+                    //std::cout << "    registered pt_tag: " << pt2_tag << std::endl;
+                    //std::cout << "    registered vindex:" << map_ptag2vindex.at(pt2_tag) << std::endl;
+                    //---
+                }
+            }
+        }
+        //+++
+        std::cout << "mesh.face_matrix(): " << std::endl;
+        std::cout << mesh.face_matrix() << std::endl;
+        //---
+        meshes.push_back(mesh);
+    }
+
+    return meshes;
 }
 
 // read the tag of a point, line, surface, or volume
@@ -254,7 +388,7 @@ void gmsh::geo::read_entities(std::ifstream &file)
     //+++
     /*
     {
-         Output the points, lines, surfaces, and volumes
+        // Output the points, lines, surfaces, and volumes
         std::cout << "Points:" << std::endl;
         for (const auto &point : this->m_points)
         {

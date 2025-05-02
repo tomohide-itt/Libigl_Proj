@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <Eigen/Dense>
+#include "../migl/mesh.h"
 
 namespace gmsh
 {
@@ -69,7 +70,11 @@ namespace gmsh
             surface& operator=( const surface& s );
             // Getters
             int tag() const { return m_tag; }
+            int positive_tag() const;
+            int size() const { return m_line_tags.size(); }
             int line_tag( int i ) const { return m_line_tags[i]; }
+            int line_positive_tag( int i ) const { return m_line_tags[i] > 0 ? m_line_tags[i] : -m_line_tags[i]; }
+            // Get the line tag without sign
             // Setters
             int& tag() { return m_tag; }
             int& line_tag( int i ) { return m_line_tags[i]; }
@@ -90,6 +95,7 @@ namespace gmsh
             volume& operator=( const volume& v );
             // Getters
             int tag() const { return m_tag; }
+            int size() const { return m_surface_tags.size(); }
             int surface_tag( int i ) const { return m_surface_tags[i]; }
             // Setters
             int& tag() { return m_tag; }
@@ -106,12 +112,12 @@ namespace gmsh
     {
         public:
             void read( const std::string& filename );
-            void resize_mesh_matrices();
             // Getters
             int num_points() const { return m_num_points; }
             int num_lines() const { return m_num_lines; }
             int num_surfaces() const { return m_num_surfaces; }
             int num_volumes() const { return m_num_volumes; }
+            std::vector<migl::mesh> get_meshes() const;
 
         private:
             int read_tag( const std::string& str, const std::string& tag_name );
@@ -143,8 +149,6 @@ namespace gmsh
             std::vector<volume> m_volumes;
             std::map<int, int> m_volume_map_index2tag;
             std::map<int, int> m_volume_map_tag2index;
-            Eigen::MatrixXd m_vertex_matrix;
-            std::vector<Eigen::MatrixXi> m_formation_matrices;
     }; //geo
 }
 
