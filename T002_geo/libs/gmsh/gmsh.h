@@ -117,6 +117,7 @@ namespace gmsh
             int num_lines() const { return m_num_lines; }
             int num_surfaces() const { return m_num_surfaces; }
             int num_volumes() const { return m_num_volumes; }
+            // Get the vector of meshes
             std::vector<migl::mesh> get_meshes() const;
 
         private:

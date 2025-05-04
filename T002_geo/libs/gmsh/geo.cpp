@@ -97,8 +97,8 @@ std::vector<migl::mesh> gmsh::geo::get_meshes() const
             mesh.vertex_matrix()(i,2) = pt.z();
         }
         //+++
-        std::cout << "mesh.vertex_matrix(): " << std::endl;
-        std::cout << mesh.vertex_matrix() << std::endl;
+        //std::cout << "mesh.vertex_matrix(): " << std::endl;
+        //std::cout << mesh.vertex_matrix() << std::endl;
         //---
         // Create the face matrix
         for( int i=0; i<num_faces; i++ )
@@ -147,8 +147,8 @@ std::vector<migl::mesh> gmsh::geo::get_meshes() const
             }
         }
         //+++
-        std::cout << "mesh.face_matrix(): " << std::endl;
-        std::cout << mesh.face_matrix() << std::endl;
+        //std::cout << "mesh.face_matrix(): " << std::endl;
+        //std::cout << mesh.face_matrix() << std::endl;
         //---
         meshes.push_back(mesh);
     }

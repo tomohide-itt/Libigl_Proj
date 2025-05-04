@@ -40,8 +40,8 @@ igl_include(glfw)
 igl_include(copyleft cgal)
 
 # 自作ライブラリを追加
-add_subdirectory(libs/gmsh gmsh)
-add_subdirectory(libs/migl migl)
+add_subdirectory( libs/gmsh )
+add_subdirectory( libs/migl )
 
 # 実行可能ファイルの追加
 igl_add_executable(${PRGNAME} igl::glfw igl_copyleft::cgal gmsh migl )
