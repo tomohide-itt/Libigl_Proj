@@ -62,12 +62,22 @@ int main(int argc, char *argv[])
   }
   */
   //----
-
   //　地盤のメッシュを統合してgeoオブジェクトに変換する
   gmsh::geo integrated_ground_geo = migl::mesh::get_gmsh_geo(ground_meshes);
   //　geoファイルを出力する
   std::string integrated_ground_geo_filename = (output_dir / "integrated_ground_model.geo").string();
   integrated_ground_geo.write(integrated_ground_geo_filename);
+  /*
+  {
+    std::vector<migl::mesh> partial_ground_meshes(3);
+    partial_ground_meshes[0] = ground_meshes[5];
+    partial_ground_meshes[1] = ground_meshes[10];
+    partial_ground_meshes[2] = ground_meshes[12];
+    gmsh::geo integrated_p_ground_geo = migl::mesh::get_gmsh_geo(partial_ground_meshes);
+    std::string integrated_p_ground_geo_filename = (output_dir / "integrated_p_ground_model.geo").string();
+    integrated_p_ground_geo.write(integrated_p_ground_geo_filename);
+  }
+  */
 
   //　すべての地盤メッシュの色を設定する
   std::vector<Eigen::MatrixXd> colors(ground_meshes.size());

@@ -46,6 +46,9 @@ namespace migl
             static bool is_outward_facing( const Eigen::MatrixXd& V, const Eigen::MatrixXi& F );
             static mesh integrate_mesh( const std::vector<mesh>& meshes, std::vector<std::vector<int>>& face_indices_in_volumes );
             static gmsh::geo get_gmsh_geo( const std::vector<mesh>& meshes );
+
+            static mesh integrate_mesh_test( const std::vector<mesh>& meshes, std::vector<std::vector<int>>& face_indices_in_volumes );
+            static gmsh::geo get_gmsh_geo_test( const std::vector<mesh> &meshes );
         
         private:
             static std::map<int,int> create_integrate_vertex_map( const mesh& base_map, const mesh& add_map );

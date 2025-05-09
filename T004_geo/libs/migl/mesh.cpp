@@ -193,11 +193,66 @@ bool migl::mesh::is_outward_facing( const Eigen::MatrixXd& V, const Eigen::Matri
     return (outward_count >= inward_count);
 }
 
+// Integrate test
+migl::mesh migl::mesh::integrate_mesh_test( const std::vector<mesh>& meshes, std::vector<std::vector<int>>& face_indices_in_volumes )
+{
+    migl::mesh integrated_mesh = meshes[0];
+    //
+    face_indices_in_volumes.resize(meshes.size());
+    for( int i=0; i<meshes[0].face_matrix().rows(); i++ )
+    {
+        face_indices_in_volumes[0].push_back(i);
+    }
+    //
+    for( int i=1; i<meshes.size(); i++ )
+    {
+
+
+        int base_mesh_num_vertices = integrated_mesh.vertex_matrix().rows();
+        int add_mesh_num_vertices = meshes[i].vertex_matrix().rows();
+        //統合後の頂点数
+        int num_vertices = base_mesh_num_vertices + add_mesh_num_vertices;
+        //統合メッシュのV
+        Eigen::MatrixXd base_V = integrated_mesh.vertex_matrix();
+        //統合メッシュに追加するV
+        Eigen::MatrixXd add_V = meshes[i].vertex_matrix();
+        //統合メッシュの頂点マトリクスのサイズを更新し，メッシュ[i]の頂点を追加
+        integrated_mesh.vertex_matrix().resize(num_vertices, 3);
+        integrated_mesh.vertex_matrix() << base_V, add_V;
+
+
+
+        int base_mesh_num_faces = integrated_mesh.face_matrix().rows();
+        int add_mesh_num_faces = meshes[i].face_matrix().rows();
+        //統合後の面の数
+        int num_faces = base_mesh_num_faces + add_mesh_num_faces;
+        //統合メッシュのF
+        Eigen::MatrixXi base_F = integrated_mesh.face_matrix();
+        //統合メッシュに追加するF
+        Eigen::MatrixXi add_F = meshes[i].face_matrix();
+        //
+        for( int j=0; j<add_F.rows(); j++ )
+        {
+            for( int k=0; k<3; k++ ) add_F(j,k) += base_mesh_num_vertices;
+        }
+        //
+        integrated_mesh.face_matrix().resize(num_faces, 3);
+        integrated_mesh.face_matrix() << base_F, add_F;
+        //
+        for( int j=0; j<add_F.rows(); j++ )
+        {
+            face_indices_in_volumes[i].push_back(base_mesh_num_faces+j);
+        }
+    }
+    return integrated_mesh;
+}
+
 // Integrate multiple meshes into one
 migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, std::vector<std::vector<int>>& face_indices_in_volumes )
 {
 //+++
-    //std::ofstream fdeb(DEBUG_PATH "/integrate_mesh.txt");
+    bool debug = false;
+    std::ofstream fdeb(DEBUG_PATH "/integrate_mesh.txt");
 //---
     //初期の統合メッシュにmeshes[0]を代入する
     migl::mesh integrated_mesh = meshes[0];
@@ -213,22 +268,28 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
     {
         std::cout << "integrating mesh[" << i << "] / " << meshes.size()-1 << std::endl;
 //+++
-        //fdeb << "integrating mesh[" << i << "] ------------------" << std::endl;
-        //fdeb << "base_mesh V:" << std::endl << integrated_mesh.vertex_matrix() << std::endl;
-        //fdeb << "base_mesh F:" << std::endl << integrated_mesh.face_matrix() << std::endl;
-        //fdeb << "mesh[" << i << "] V:" << std::endl << meshes[i].vertex_matrix() << std::endl;
-        //fdeb << "mesh[" << i << "] F:" << std::endl << meshes[i].face_matrix() << std::endl;
+        if( debug )
+        {
+            fdeb << "integrating mesh[" << i << "] ------------------" << std::endl;
+            fdeb << "base_mesh V:" << std::endl << integrated_mesh.vertex_matrix() << std::endl;
+            fdeb << "base_mesh F:" << std::endl << integrated_mesh.face_matrix() << std::endl;
+            fdeb << "mesh[" << i << "] V:" << std::endl << meshes[i].vertex_matrix() << std::endl;
+            fdeb << "mesh[" << i << "] F:" << std::endl << meshes[i].face_matrix() << std::endl;
+        }
 //---
         //メッシュ[i]の頂点マトリクスを統合するため，
         //メッシュ[i]の頂点マトリクスのindexをkey
         //統合後の頂点マトリクスのindexをvalueとするマップを作成する
         std::map<int,int> vertex_map = create_integrate_vertex_map( integrated_mesh, meshes[i] );
 //+++
-        //fdeb << "vertex_map: " << std::endl;
-        //for( const auto &[key,val] : vertex_map )
-        //{
-        //    fdeb << key << " -> " << val << std::endl;
-        //}
+        if( debug )
+        {
+            fdeb << "vertex_map: " << std::endl;
+            for( const auto &[key,val] : vertex_map )
+            {
+                fdeb << key << " -> " << val << std::endl;
+            }
+        }
 //---
         //統合メッシュの頂点数
         int base_mesh_num_vertices = integrated_mesh.vertex_matrix().rows();
@@ -269,24 +330,32 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
         auto out_of_range = [&](int j) ->bool
         {
 //+++
-            //fdeb << "meshes[" << i << "]::face[" << j << "]:( ";
-            //fdeb << meshes[i].face_matrix()(j,0) << ", ";
-            //fdeb << meshes[i].face_matrix()(j,1) << ", ";
-            //fdeb << meshes[i].face_matrix()(j,2) << " )" << std::endl; 
+            if (debug)
+            {
+                fdeb << "meshes[" << i << "]::face[" << j << "]:( ";
+                fdeb << meshes[i].face_matrix()(j, 0) << ", ";
+                fdeb << meshes[i].face_matrix()(j, 1) << ", ";
+                fdeb << meshes[i].face_matrix()(j, 2) << " )" << std::endl;
+            }
 //---
             bool ret = vertex_map.at(meshes[i].face_matrix()(j,0)) >= base_mesh_num_vertices ||
                    vertex_map.at(meshes[i].face_matrix()(j,1)) >= base_mesh_num_vertices ||
                    vertex_map.at(meshes[i].face_matrix()(j,2)) >= base_mesh_num_vertices;
 //+++
-            //fdeb << "converted to vertex index after integration:( ";
-            //fdeb << vertex_map.at(meshes[i].face_matrix()(j,0)) << ", ";
-            //fdeb << vertex_map.at(meshes[i].face_matrix()(j,1)) << ", ";
-            //fdeb << vertex_map.at(meshes[i].face_matrix()(j,2)) << " ) >= " << base_mesh_num_vertices << " ?" << std::endl;
-            //fdeb << "out_of_range: " << std::boolalpha << ret << std::endl;
+            if( debug )
+            {
+                fdeb << "converted to vertex index after integration:( ";
+                fdeb << vertex_map.at(meshes[i].face_matrix()(j,0)) << ", ";
+                fdeb << vertex_map.at(meshes[i].face_matrix()(j,1)) << ", ";
+                fdeb << vertex_map.at(meshes[i].face_matrix()(j,2)) << " ) >= " << base_mesh_num_vertices << " ?" << std::endl;
+                fdeb << "out_of_range: " << std::boolalpha << ret << std::endl;
+            }
 //---
             return ret;
         };
         //
+        //統合メッシュのF
+        Eigen::MatrixXi base_F = integrated_mesh.face_matrix();
         //メッシュ[i]の面を統合するとき，新たに追加する面の数(add_mesh_num_faces)を数える
         for( int j=0; j<meshes[i].face_matrix().rows(); j++ )
         {
@@ -294,11 +363,34 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
             {
                 add_mesh_num_faces++;
             }
+            else
+            {
+                bool found_same_face = false;
+                for( int k=0; k<base_mesh_num_faces; k++ )
+                {
+                    auto match_vertex_index = [&]( int ind0, int ind1, int ind2 )->bool
+                    {
+                        return base_F(k,0) == vertex_map.at(meshes[i].face_matrix()(j,ind0)) &&
+                               base_F(k,1) == vertex_map.at(meshes[i].face_matrix()(j,ind1)) &&
+                               base_F(k,2) == vertex_map.at(meshes[i].face_matrix()(j,ind2));
+                    };
+                    if( match_vertex_index(0,1,2) || match_vertex_index(0,2,1) ||
+                        match_vertex_index(1,0,2) || match_vertex_index(1,2,0) ||
+                        match_vertex_index(2,0,1) || match_vertex_index(2,1,0) )
+                    {
+                        found_same_face = true;
+                        break;
+                    }
+                }
+                //３つの頂点はすでに統合メッシュに存在しているが，面はまだ存在していない場合
+                if( !found_same_face )
+                {
+                    add_mesh_num_faces++;
+                }
+            }
         }
         //統合後の面の数
         int num_faces = base_mesh_num_faces + add_mesh_num_faces;
-        //統合メッシュのF
-        Eigen::MatrixXi base_F = integrated_mesh.face_matrix();
         //統合メッシュに追加するF
         Eigen::MatrixXi add_F(add_mesh_num_faces, 3);
         //mesh[i]から統合メッシュのFにはない面を選択して，add_Fに登録する
@@ -314,6 +406,7 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
             }
             else
             {
+                bool found_same_face = false;
                 for( int k=0; k<base_mesh_num_faces; k++ )
                 {
                     auto match_vertex_index = [&]( int ind0, int ind1, int ind2 )->bool
@@ -327,8 +420,17 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
                         match_vertex_index(2,0,1) || match_vertex_index(2,1,0) )
                     {
                         face_indices_in_volumes[i].push_back(k);
+                        found_same_face = true;
                         break;
                     }
+                }
+                //３つの頂点はすでに統合メッシュに存在しているが，面はまだ存在していない場合
+                if( !found_same_face )
+                {
+                    face_indices_in_volumes[i].push_back( index + base_mesh_num_faces );
+                    add_F.row(index++) << vertex_map.at(meshes[i].face_matrix()(j,0)),
+                                          vertex_map.at(meshes[i].face_matrix()(j,1)),
+                                          vertex_map.at(meshes[i].face_matrix()(j,2));
                 }
             }
         }
@@ -352,7 +454,7 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
     }
     //---
 //+++
-    //fdeb.close();
+    fdeb.close();
 //---
     return integrated_mesh;
 }
@@ -410,6 +512,112 @@ gmsh::geo migl::mesh::get_gmsh_geo( const std::vector<migl::mesh>& meshes )
     gmsh::geo geo;
     std::vector<std::vector<int>> face_indices_in_volumes;
     migl::mesh mesh = integrate_mesh( meshes, face_indices_in_volumes );
+    //
+    std::vector<gmsh::point> points;
+    for( int i=0; i<mesh.vertex_matrix().rows(); i++ )
+    {
+        gmsh::point pt;
+        pt.tag() = i+1;
+        pt.x() = mesh.vertex_matrix()(i,0);
+        pt.y() = mesh.vertex_matrix()(i,1);
+        pt.z() = mesh.vertex_matrix()(i,2);
+        points.push_back(pt);
+    }
+    //
+    std::vector<gmsh::line> lines;
+    std::vector<gmsh::surface> surfaces;
+    int new_ln_tag = 1;
+    std::map<int,std::vector<int>> map_firstp2ln;
+    for( int i=0; i<mesh.face_matrix().rows(); i++ )
+    {
+        gmsh::surface sf;
+        sf.tag() = i+1;
+        std::array<int,3> pt_tags = { mesh.face_matrix()(i,0)+1, mesh.face_matrix()(i,1)+1, mesh.face_matrix()(i,2)+1 };
+        for( int j=0; j<3; j++ )
+        {
+            bool reverse = false;
+            int start_pt_tag = pt_tags[j];
+            int end_pt_tag = pt_tags[(j+1)%3];
+            if( pt_tags[j] > pt_tags[(j+1)%3] )
+            {
+                std::swap(start_pt_tag, end_pt_tag);
+                reverse = true;
+            }
+            std::vector<int> exist_ln_tags = map_firstp2ln[start_pt_tag];
+            int ln_tag = -1;
+            for( const auto &exist_ln_tag : exist_ln_tags )
+            {
+                if( lines[exist_ln_tag].end_point_tag() == end_pt_tag )
+                {
+                    ln_tag = exist_ln_tag+1;
+                    break;
+                }
+            }
+            gmsh::line ln;
+            if( ln_tag == -1 )
+            {
+                ln_tag = new_ln_tag;
+                ln.tag() = new_ln_tag++;
+                ln.start_point_tag() = start_pt_tag;
+                ln.end_point_tag() = end_pt_tag;
+                lines.push_back(ln);
+                map_firstp2ln[start_pt_tag].push_back(ln.tag()-1);
+            }
+            if( reverse ) sf.line_tags().push_back(-ln_tag);
+            else          sf.line_tags().push_back(ln_tag);
+        }
+        surfaces.push_back(sf);
+    }
+    std::vector<gmsh::volume> volumes;
+    for( int i=0; i<meshes.size(); i++ )
+    {
+        gmsh::volume vol;
+        vol.tag() = i+1;
+        for( const auto &sf_tag : face_indices_in_volumes[i] )
+        {
+            vol.surface_tags().push_back(sf_tag+1);
+        }
+        volumes.push_back(vol);
+    }
+    //
+    geo.set_points( points );
+    geo.set_lines( lines );
+    geo.set_surfaces( surfaces );
+    geo.set_volumes( volumes );
+
+    //+++
+    std::cout << "points: " << std::endl;
+    for( const auto &pt : points )
+    {
+        pt.output();
+    }
+    std::cout << "lines: " << std::endl;
+    for( const auto &ln : lines )
+    {
+        ln.output();
+    }
+    std::cout << "surfaces: " << std::endl;
+    for( const auto &sf : surfaces )
+    {
+        sf.output();
+    }
+    std::cout << "volumes: " << std::endl;
+    for( const auto &vol : volumes )
+    {
+        vol.output();
+    }
+    //---
+
+    return geo;
+}
+
+
+// Get the GMSH geo object from the meshes
+gmsh::geo migl::mesh::get_gmsh_geo_test( const std::vector<migl::mesh>& meshes )
+{
+    gmsh::geo geo;
+    std::vector<std::vector<int>> face_indices_in_volumes;
+    migl::mesh mesh = integrate_mesh_test( meshes, face_indices_in_volumes );
     //
     std::vector<gmsh::point> points;
     for( int i=0; i<mesh.vertex_matrix().rows(); i++ )
