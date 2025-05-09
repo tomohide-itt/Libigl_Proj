@@ -22,12 +22,18 @@ int main(int argc, char *argv[])
   {
     std::filesystem::create_directory(output_dir);
   }
+  //デバッグログ用のディレクトリを作成
+  std::filesystem::path debug_dir = DEBUG_PATH;
+  if (!std::filesystem::exists(debug_dir))
+  {
+    std::filesystem::create_directory(debug_dir);
+  }
   //
   gmsh::geo ground_geo; //地盤モデル用geoオブジェクト
   gmsh::geo box_geo; //ボックス用geoオブジェクト
   // geoファイルを読み込む
-  ground_geo.read(DATA_PATH "/simple_ground_model.geo");
-  box_geo.read(DATA_PATH "/simple_box.geo");
+  ground_geo.read(DATA_PATH "/ground_model.geo");
+  box_geo.read(DATA_PATH "/box.geo");
   // メッシュに変換する
   std::vector<migl::mesh> ground_meshes = ground_geo.get_meshes();
   std::vector<migl::mesh> box_meshes = box_geo.get_meshes();

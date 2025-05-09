@@ -19,3 +19,5 @@ target_link_libraries(${LIB_NAME} PUBLIC
 target_include_directories( ${LIB_NAME} PRIVATE
     ${LIB_DIR}/gmsh
 )
+
+target_compile_definitions( ${LIB_NAME} PUBLIC DEBUG_PATH=\"${CMAKE_BINARY_DIR}/debug\" )

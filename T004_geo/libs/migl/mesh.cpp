@@ -196,8 +196,13 @@ bool migl::mesh::is_outward_facing( const Eigen::MatrixXd& V, const Eigen::Matri
 // Integrate multiple meshes into one
 migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, std::vector<std::vector<int>>& face_indices_in_volumes )
 {
-    //
+//+++
+    //std::ofstream fdeb(DEBUG_PATH "/integrate_mesh.txt");
+//---
+    //初期の統合メッシュにmeshes[0]を代入する
     migl::mesh integrated_mesh = meshes[0];
+    //face_indices_in_volumes: 各Volumeを形成するfaceのindexを格納するための変数
+    //その初期設定
     face_indices_in_volumes.resize(meshes.size());
     for( int i=0; i<meshes[0].face_matrix().rows(); i++ )
     {
@@ -206,8 +211,28 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
     //
     for( int i=1; i<meshes.size(); i++ )
     {
+        std::cout << "integrating mesh[" << i << "] / " << meshes.size()-1 << std::endl;
+//+++
+        //fdeb << "integrating mesh[" << i << "] ------------------" << std::endl;
+        //fdeb << "base_mesh V:" << std::endl << integrated_mesh.vertex_matrix() << std::endl;
+        //fdeb << "base_mesh F:" << std::endl << integrated_mesh.face_matrix() << std::endl;
+        //fdeb << "mesh[" << i << "] V:" << std::endl << meshes[i].vertex_matrix() << std::endl;
+        //fdeb << "mesh[" << i << "] F:" << std::endl << meshes[i].face_matrix() << std::endl;
+//---
+        //メッシュ[i]の頂点マトリクスを統合するため，
+        //メッシュ[i]の頂点マトリクスのindexをkey
+        //統合後の頂点マトリクスのindexをvalueとするマップを作成する
         std::map<int,int> vertex_map = create_integrate_vertex_map( integrated_mesh, meshes[i] );
+//+++
+        //fdeb << "vertex_map: " << std::endl;
+        //for( const auto &[key,val] : vertex_map )
+        //{
+        //    fdeb << key << " -> " << val << std::endl;
+        //}
+//---
+        //統合メッシュの頂点数
         int base_mesh_num_vertices = integrated_mesh.vertex_matrix().rows();
+        //メッシュ[i]の頂点を統合するとき，新たに追加する頂点数(add_mesh_num_vertices)を数える
         int add_mesh_num_vertices = 0;
         for( const auto& [add_vindex, vindex] : vertex_map )
         {
@@ -216,9 +241,13 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
                 add_mesh_num_vertices++;
             }
         }
+        //統合後の頂点数
         int num_vertices = base_mesh_num_vertices + add_mesh_num_vertices;
+        //統合メッシュのV
         Eigen::MatrixXd base_V = integrated_mesh.vertex_matrix();
+        //統合メッシュに追加するV
         Eigen::MatrixXd add_V(add_mesh_num_vertices, 3);
+        //mesh[i]から統合メッシュのVにはない頂点を選択して，add_Vに登録する
         int index = 0;
         for( const auto& [add_vindex, vindex] : vertex_map )
         {
@@ -227,19 +256,38 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
                 add_V.row(index++) = meshes[i].vertex_matrix().row(add_vindex);
             }
         }
+        //統合メッシュの頂点マトリクスのサイズを更新し，メッシュ[i]の頂点を追加
         integrated_mesh.vertex_matrix().resize(num_vertices, 3);
         integrated_mesh.vertex_matrix() << base_V, add_V;
         //
+        //統合メッシュの面の数
         int base_mesh_num_faces = integrated_mesh.face_matrix().rows();
         int add_mesh_num_faces = 0;
         //
+        //メッシュ[i]のj番目の面を形成する頂点のすべてが統合メッシュの頂点に含まれている場合，trueを
+        //そうでなければfalseを返す　ラムダ関数
         auto out_of_range = [&](int j) ->bool
         {
-            return vertex_map.at(meshes[i].face_matrix()(j,0)) >= base_mesh_num_vertices ||
+//+++
+            //fdeb << "meshes[" << i << "]::face[" << j << "]:( ";
+            //fdeb << meshes[i].face_matrix()(j,0) << ", ";
+            //fdeb << meshes[i].face_matrix()(j,1) << ", ";
+            //fdeb << meshes[i].face_matrix()(j,2) << " )" << std::endl; 
+//---
+            bool ret = vertex_map.at(meshes[i].face_matrix()(j,0)) >= base_mesh_num_vertices ||
                    vertex_map.at(meshes[i].face_matrix()(j,1)) >= base_mesh_num_vertices ||
                    vertex_map.at(meshes[i].face_matrix()(j,2)) >= base_mesh_num_vertices;
+//+++
+            //fdeb << "converted to vertex index after integration:( ";
+            //fdeb << vertex_map.at(meshes[i].face_matrix()(j,0)) << ", ";
+            //fdeb << vertex_map.at(meshes[i].face_matrix()(j,1)) << ", ";
+            //fdeb << vertex_map.at(meshes[i].face_matrix()(j,2)) << " ) >= " << base_mesh_num_vertices << " ?" << std::endl;
+            //fdeb << "out_of_range: " << std::boolalpha << ret << std::endl;
+//---
+            return ret;
         };
         //
+        //メッシュ[i]の面を統合するとき，新たに追加する面の数(add_mesh_num_faces)を数える
         for( int j=0; j<meshes[i].face_matrix().rows(); j++ )
         {
             if( out_of_range(j) )
@@ -247,9 +295,13 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
                 add_mesh_num_faces++;
             }
         }
+        //統合後の面の数
         int num_faces = base_mesh_num_faces + add_mesh_num_faces;
+        //統合メッシュのF
         Eigen::MatrixXi base_F = integrated_mesh.face_matrix();
+        //統合メッシュに追加するF
         Eigen::MatrixXi add_F(add_mesh_num_faces, 3);
+        //mesh[i]から統合メッシュのFにはない面を選択して，add_Fに登録する
         index = 0;
         for( int j=0; j<meshes[i].face_matrix().rows(); j++ )
         {
@@ -299,6 +351,9 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
         std::cout << std::endl;
     }
     //---
+//+++
+    //fdeb.close();
+//---
     return integrated_mesh;
 }
 
@@ -326,21 +381,24 @@ std::map<int,int> migl::mesh::create_integrate_vertex_map( const mesh& base_map,
         }
         else
         {
+            bool found = false;
             for( int j=0; j<num_base_vertices; j++ )
             {
                 Eigen::RowVector3d base_pt = base_map.vertex_matrix().row(j);
-                if( base_pt(0) < add_min(0) || base_pt(0) > add_max(0) ||
-                    base_pt(1) < add_min(1) || base_pt(1) > add_max(1) ||
-                    base_pt(2) < add_min(2) || base_pt(2) > add_max(2) )
-                {
-                    continue;
-                }
+                //if( base_pt(0) < add_min(0) || base_pt(0) > add_max(0) ||
+                //    base_pt(1) < add_min(1) || base_pt(1) > add_max(1) ||
+                //    base_pt(2) < add_min(2) || base_pt(2) > add_max(2) )
+                //{
+                //    continue;
+                //}
                 if( pt.isApprox(base_pt, 1e-6) )
                 {
                     vertex_map[i] = j;
+                    found = true;
                     break;
                 }
             }
+            if( !found ) vertex_map[i] = add_index++;
         }
     }
     return vertex_map;
