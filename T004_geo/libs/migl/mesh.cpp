@@ -251,11 +251,19 @@ migl::mesh migl::mesh::integrate_mesh_test( const std::vector<mesh>& meshes, std
 migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, std::vector<std::vector<int>>& face_indices_in_volumes )
 {
 //+++
-    bool debug = false;
+    bool debug = true;
     std::ofstream fdeb(DEBUG_PATH "/integrate_mesh.txt");
 //---
     //初期の統合メッシュにmeshes[0]を代入する
     migl::mesh integrated_mesh = meshes[0];
+//+++
+    if( debug )
+    {
+        fdeb << "integrating mesh[" << 0 << "] ------------------" << std::endl;
+        fdeb << "base_mesh V:" << std::endl << integrated_mesh.vertex_matrix() << std::endl;
+        fdeb << "base_mesh F:" << std::endl << integrated_mesh.face_matrix() << std::endl;
+    }
+//---
     //face_indices_in_volumes: 各Volumeを形成するfaceのindexを格納するための変数
     //その初期設定
     face_indices_in_volumes.resize(meshes.size());
@@ -438,6 +446,7 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
         integrated_mesh.face_matrix() << base_F, add_F;
     }
     //+++
+    /*
     std::cout << "integrated_mesh.vertex_matrix(): " << std::endl;
     std::cout << integrated_mesh.vertex_matrix() << std::endl;
     std::cout << "integrated_mesh.face_matrix(): " << std::endl;
@@ -452,6 +461,7 @@ migl::mesh migl::mesh::integrate_mesh( const std::vector<migl::mesh>& meshes, st
         }
         std::cout << std::endl;
     }
+    */
     //---
 //+++
     fdeb.close();
@@ -586,6 +596,7 @@ gmsh::geo migl::mesh::get_gmsh_geo( const std::vector<migl::mesh>& meshes )
     geo.set_volumes( volumes );
 
     //+++
+    /*
     std::cout << "points: " << std::endl;
     for( const auto &pt : points )
     {
@@ -606,6 +617,7 @@ gmsh::geo migl::mesh::get_gmsh_geo( const std::vector<migl::mesh>& meshes )
     {
         vol.output();
     }
+    */
     //---
 
     return geo;
@@ -692,6 +704,7 @@ gmsh::geo migl::mesh::get_gmsh_geo_test( const std::vector<migl::mesh>& meshes )
     geo.set_volumes( volumes );
 
     //+++
+    /*
     std::cout << "points: " << std::endl;
     for( const auto &pt : points )
     {
@@ -712,6 +725,7 @@ gmsh::geo migl::mesh::get_gmsh_geo_test( const std::vector<migl::mesh>& meshes )
     {
         vol.output();
     }
+    */
     //---
 
     return geo;

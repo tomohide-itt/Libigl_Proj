@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
   gmsh::geo box_geo; //ボックス用geoオブジェクト
   // geoファイルを読み込む
   ground_geo.read(DATA_PATH "/ground_model.geo");
-  box_geo.read(DATA_PATH "/box.geo");
+  box_geo.read(DATA_PATH "/box_shift_x6m.geo");
   // メッシュに変換する
   std::vector<migl::mesh> ground_meshes = ground_geo.get_meshes();
   std::vector<migl::mesh> box_meshes = box_geo.get_meshes();
@@ -62,11 +62,10 @@ int main(int argc, char *argv[])
   }
   */
   //----
-  //　地盤のメッシュを統合してgeoオブジェクトに変換する
-  gmsh::geo integrated_ground_geo = migl::mesh::get_gmsh_geo(ground_meshes);
-  //　geoファイルを出力する
-  std::string integrated_ground_geo_filename = (output_dir / "integrated_ground_model.geo").string();
-  integrated_ground_geo.write(integrated_ground_geo_filename);
+  //　地盤のメッシュを統合してgeoオブジェクトに変換し，geoファイルに出力
+  //gmsh::geo integrated_ground_geo = migl::mesh::get_gmsh_geo(ground_meshes);
+  //std::string integrated_ground_geo_filename = (output_dir / "integrated_ground_model.geo").string();
+  //integrated_ground_geo.write(integrated_ground_geo_filename);
   /*
   {
     std::vector<migl::mesh> partial_ground_meshes(3);
@@ -105,11 +104,20 @@ int main(int argc, char *argv[])
     igl::jet(I,0,ground_meshes.size(),colors_out[i]);
   }
 
-  //　地盤のメッシュを統合してgeoオブジェクトに変換する
-  gmsh::geo integrated_ground_out_geo = migl::mesh::get_gmsh_geo(ground_meshes_out);
-  //　geoファイルを出力する
-  std::string integrated_ground_out_geo_filename = (output_dir / "integrated_ground_out_model.geo").string();
-  integrated_ground_out_geo.write(integrated_ground_out_geo_filename);
+  //　地盤のメッシュを統合してgeoオブジェクトに変換し，geoファイルに出力する
+  //gmsh::geo integrated_ground_out_geo = migl::mesh::get_gmsh_geo(ground_meshes_out);
+  //std::string integrated_ground_out_geo_filename = (output_dir / "integrated_ground_out_model.geo").string();
+  //integrated_ground_out_geo.write(integrated_ground_out_geo_filename);
+
+  {
+    std::vector<migl::mesh> partial_ground_meshes(1);
+    partial_ground_meshes[0] = ground_meshes_out[5];
+    //partial_ground_meshes[1] = ground_meshes_out[10];
+    //partial_ground_meshes[2] = ground_meshes_out[12];
+    gmsh::geo integrated_p_ground_geo = migl::mesh::get_gmsh_geo(partial_ground_meshes);
+    std::string integrated_p_ground_geo_filename = (output_dir / "integrated_partial_ground_out_model.geo").string();
+    integrated_p_ground_geo.write(integrated_p_ground_geo_filename);
+  }
 
   //　ボックスとのブーリアン演算を行ったすべての地盤メッシュを統一する
   migl::mesh all_ground_mesh_out;
