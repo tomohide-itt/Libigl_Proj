@@ -185,6 +185,16 @@ void migl::mesh::orient_faces_consistently( const Eigen::MatrixXi& F, Eigen::Mat
     }
 }
 
+void migl::mesh::shift_vertices( const Eigen::Vector3d &shift )
+{
+    for( int i=0; i<m_vertex_matrix.rows(); i++ )
+    {
+        m_vertex_matrix(i,0) += shift(0);
+        m_vertex_matrix(i,1) += shift(1);
+        m_vertex_matrix(i,2) += shift(2);
+    }
+}
+
 // Check if the faces are outward facing
 bool migl::mesh::is_outward_facing( const Eigen::MatrixXd& V, const Eigen::MatrixXi& F )
 {

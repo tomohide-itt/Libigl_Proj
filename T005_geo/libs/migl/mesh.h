@@ -28,14 +28,26 @@ namespace migl
             mesh& operator=( const mesh& m );
             // Getters
             int dim() const { return m_dim; }
+            int num_vertices() const { return m_vertex_matrix.rows(); }
+            int num_faces() const { return m_face_matrix.rows(); }
             const Eigen::MatrixXd& vertex_matrix() const { return m_vertex_matrix; }
+            const Eigen::MatrixXd& V() const { return m_vertex_matrix; }
+            const Eigen::RowVector3d V( const int i ) const { return m_vertex_matrix.row(i); }
+            const double V( const int i, const int j ) const { return m_vertex_matrix(i,j); }
             const Eigen::MatrixXi& face_matrix() const { return m_face_matrix; }
+            const Eigen::MatrixXi& F() const { return m_face_matrix; }
+            const int F( const int i, const int j ) const { return m_face_matrix(i,j); }
             Eigen::Vector3d max_vertex() const;
             Eigen::Vector3d min_vertex() const;
             // Setters
             int& dim() { return m_dim; }
             Eigen::MatrixXd& vertex_matrix() { return m_vertex_matrix; }
+            Eigen::MatrixXd& V() { return m_vertex_matrix; }
+            //Eigen::RowVector3d& V( const int i ) { return m_vertex_matrix.row(i); }
+            double& V( const int i, const int j ) { return m_vertex_matrix(i,j); }
             Eigen::MatrixXi& face_matrix() { return m_face_matrix; }
+            Eigen::MatrixXi& F() { return m_face_matrix; }
+            int& F( const int i, const int j ) { return m_face_matrix(i,j); }
             // Print function
             void output() const;
             std::ostream& output_vertex_matrix( std::ostream &out=std::cout, const int width=20, const int dec=10 ) const;
@@ -44,6 +56,7 @@ namespace migl
             void orient_faces_consistently();
             bool is_outward_facing() const;
             void orient_faces_outward();
+            void shift_vertices( const Eigen::Vector3d &shift );
 
             static void orient_faces_consistently( const Eigen::MatrixXi& F, Eigen::MatrixXi& F_out );
             static bool is_outward_facing( const Eigen::MatrixXd& V, const Eigen::MatrixXi& F );

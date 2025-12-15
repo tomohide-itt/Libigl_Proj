@@ -43,15 +43,17 @@ igl_include(copyleft cgal)
 # 自作ライブラリを追加
 add_subdirectory( libs/gmsh )
 add_subdirectory( libs/migl )
+add_subdirectory( libs/cgal )
 
 # 実行可能ファイルの追加
-igl_add_executable(${PRGNAME} igl::glfw igl_copyleft::cgal gmsh migl )
+igl_add_executable(${PRGNAME} igl::glfw igl_copyleft::cgal gmsh migl cgal )
 
 target_compile_features(${PRGNAME} PUBLIC cxx_std_17)
 
 target_include_directories( ${PRGNAME} PRIVATE
     ${LIB_DIR}/gmsh
     ${LIB_DIR}/migl
+    ${LIB_DIR}/cgal
 )
 
 # データへのパスを指定する 
